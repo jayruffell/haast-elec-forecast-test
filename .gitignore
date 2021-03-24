@@ -1,6 +1,7 @@
 *.docx
 *.pdf
 *.csv
+*.png
 
 # History files
 .Rhistory
