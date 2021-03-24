@@ -1,6 +1,6 @@
-.docx
-.pdf
-.csv
+*.docx
+*.pdf
+*.csv
 
 # History files
 .Rhistory
