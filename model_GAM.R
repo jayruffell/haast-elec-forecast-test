@@ -41,7 +41,7 @@ start <- Sys.time(); gam_te <- bam(load ~
                                      #    k=c(100, 7),
                                      #    bs=c('cr','cr')) +
                                      s(day, k=7, bs='cr') +
-                                     daychar + hol
+                                     daysSinceStart + hol
                                    ,
                                    data = mdf,
                                    family = gaussian,
