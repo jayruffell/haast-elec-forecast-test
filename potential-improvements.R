@@ -36,3 +36,7 @@
 # - autocorrelation, if i havne't factored in
 # - public holiday/rain interaction
 # - add regularisation term to MR polynomials - or use GAMs on a supercomputer (which do penalisation)
+# - see if winddir and any other vars are patterned in resids plots?
+# - for forecasting, find best model using CV rather than AIC
+# - if using looped mr_int_poly model, then do loops 'on the fly' - altho only important if trends change over time, which I don't think they do.
+# - variance modelling for xmas period?

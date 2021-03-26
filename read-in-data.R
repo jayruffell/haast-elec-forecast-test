@@ -8,8 +8,8 @@
 cat('\nNOTE times are getting reported in UTC, but data is presumably NZ. Just FYI...\n')
 
 # params: filter dates for 'mdf', used for initial model training
-startdate <- '2013-01-01'
-enddate <- '2018-02-14'
+startdate <- '2013-07-07'
+enddate <- '2017-07-07'
 
 library(tidyverse)
 library(forecast)
@@ -40,6 +40,7 @@ dd <- read_csv('combineddata.csv') %>%
     daygrouped=ifelse(daychar %in% c('1', '5', '6', '7'), daychar, '0'),
     # week of year and days since start
     week=week(time),
+    weekchar=as.character(week),
     daysSinceStart = 1:nrow(.),
     # xmas break
     xmasbreak=ifelse(week %in% c(52, 1), 1, 0))
@@ -147,6 +148,25 @@ fitted_vals_summer_winter_plot <- function(mydf, mymod, mymod_char){
   print(myplot)
   myplot +
     ggsave(paste0('predictedVsFitted_', mymod_char, '.png'), height=6, width=10)
+}
+
+# function for fitted vs predicted values on all test data
+fitted_vals_plot <- function(testdata, mymod, mymod_char){
+  myplot <- testdata %>%
+    mutate(fitted=predict(mymod, newdata=testdata)) %>%
+    select(fitted, load, time) %>%
+    gather(key, value, -time) %>%
+    ggplot(aes(time, value, colour=key)) + geom_line()
+  print(myplot)
+  myplot +
+    ggsave(paste0('predictedVsFitted_testdata_', mymod_char, '.png'), height=6, width=10)
+}
+
+# function for mape
+report_mape <- function(testdata, mymod){
+  predsdf <- testdata %>%
+    mutate(fitted=predict(mymod, newdata=testdata))
+  return(100 * mean(abs((predsdf$load - predsdf$fitted)/predsdf$load)))
 }
 
 # call to see mem usage

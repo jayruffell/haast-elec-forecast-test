@@ -17,13 +17,13 @@ polyGrid = expand_grid(main=1:maxorder, tempday=1:maxorder,
   mutate(aic=NA, numparams=NA)
 cat(paste('\nfitting', nrow(polyGrid), 'polymodels:\n'))
 start <- Sys.time()
-for(i in 1:nrow(resultsdf)){
+for(i in 1:nrow(polyGrid)){
   mod <- lm(load ~ poly(temp_ak, polyGrid$main[i]) + 
               daychar + hourchar + 
               poly(temp_ak, polyGrid$tempday[i]):daychar + 
               daychar:hourchar + 
               poly(temp_ak, polyGrid$temphour[i]):hourchar +
-              hol + daysSinceStart,
+              hol + daysSinceStart + weekchar, # using char cos of nonlinearities with e.g. easter
             data=mdf)
   polyGrid$aic[i] <- AIC(mod)
   polyGrid$numparams[i] <- length(mod$coefficients)
@@ -33,7 +33,11 @@ cat(paste0('\nRun in ',
            round(as.numeric(difftime(Sys.time(),start, units='mins')), 1),
            ' mins\n'))
 
+#++++++++++++++
 # refit based on best - or smallest params within delta2 anyway
+#++++++++++++++
+
+# find best
 bestAIC <- polyGrid %>%
   filter(aic==min(aic)) %>%
   pull(aic)
@@ -41,16 +45,28 @@ candidates <- polyGrid %>%
   mutate(deltaAIC=aic-bestAIC) %>%
   filter(deltaAIC <=2)
 finalparams <- distinct(filter(candidates, deltaAIC==min(deltaAIC)))
+# some checks to ensure one set of params only
+if(nrow(finalparams)>1){
+  finalparams <- filter(finalparams, numparams==min(numparams))
+} 
+if(nrow(finalparams)>1) finalparams <- head(finalparams, 1)
 
+# refit
 mr_int_poly <- lm(load ~ poly(temp_ak, finalparams$main) + 
                     daychar + hourchar + 
                     poly(temp_ak, finalparams$tempday):daychar + 
                     daychar:hourchar + 
                     poly(temp_ak, finalparams$temphour):hourchar +
-                    hol + daysSinceStart,
+                    hol + daysSinceStart + weekchar,
                   data=mdf)
 summary(mr_int_poly) # lots of highly sig values
 AIC(mr_int_poly)
+cat('best params:')
+print(finalparams)
+
+#++++++++++++++
+# PLaceholder: do auto.arima() on resids, and then refit with this corr structure
+#++++++++++++++
 
 #++++++++++++++
 # model validation
