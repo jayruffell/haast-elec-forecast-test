@@ -197,82 +197,49 @@ sort(sapply(mget(ls()),object.size))
 # Function to Fit a polynomial model for temperature on load, where the best polynomial order (up to maxorder) is chosen as that which has the fewest number of parameters while Having dAIC < 2. 
 #________________________________________________________________
 
-# Polynomials are chosen for three terms, which must all be in the model formula:
-# - main temp effect, specified 'poly([tempvar], order_tempmain)'
-# - temp:day interaction, specified 'poly([tempvar], order_tempday)'
-# - temp:hour interaction, specified 'poly([tempvar], order_temphour)'
-# example form: 
-# - The formula is specified RHS only, e.g.:
-# "fit_best_polynomial_model(form='poly(temp_ak, order_tempmain) + 
-#   daychar + hourchar + 
-#   poly(temp_ak, order_tempday):daychar + 
-#   poly(temp_ak, order_temphour):hourchar +
-#   daysSinceStart',
-# data=mdf, maxorder=3)"
-
-# NOTE think could easily make more general by including yvar in formula, and also defining formula as e.g. poly(var1, maxorder) + poly(var2, maxorder) + ... and then dynamically building polyGrid.
-rm(myform, form)
-form='load ~ poly1(temp_ak) +
-  daychar + hourchar +
-  poly2(temp_ak):daychar +
-  poly3(temp_ak):hourchar +
-  daysSinceStart'
-# dynamically build grid of all polynomial orders
-expandGridList <- list()
-allPolyTerms <- str_extract_all(form, 'poly[0-9]\\(.*\\)')[[1]]
-for(p in 1:length(allPolyTerms)) expandGridList[[p]] <- 1:maxorder
-names(expandGridList) <- allPolyTerms
-polyGrid <-expand.grid(expandGridList)
-i <- 1
-p <- 2
-orders_i <- polyGrid[i,]
-
-# dynamically swap out poly names in formula for real names and orders
-for(name_p in names(orders_i)) {
-  order_p_i <- orders_i[, name_p] # the order for the name for this iteration
-  truename <- paste0('poly(', 
-                     substr(name_p, 7, nchar(name_p)-1), 
-                     ',', order_p_i, ')')
-  form=gsub(name_p, truename, form, fixed=T)  
-}
-
-
-
-i <- 1
-for(p in 1:length(allPolyTerms)){
-  form_updated <- gsub()
-}
-str_extract(myform, 'poly')
-mypolyGrid <- expand.grid(str_extract(allPolyTerms))
-
-data=mdf, maxorder=3)
-
-
-
-
-
+# Poly terms must be numbered sequentially and specified without an order, thusly: "poly1(myvar) + poly2(mynextvar)"
+# NOTE have currently only tested on the below model!
+# EXAMPLE: 
+# test <- fit_best_polynomial_model(form=
+#                             'load ~ poly1(temp_ak) + 
+#                             daychar + hourchar + 
+#                             poly2(temp_ak):daychar + 
+#                             poly3(temp_ak):hourchar +
+#                             daychar:hourchar + 
+#                           hol + daysSinceStart + weekchar',
+#                           data=mdf, maxorder=3)
 fit_best_polynomial_model <- function(form, data, maxorder){
   
   #++++++++++++++
   # define formulas and fit models
   #++++++++++++++
   
-  # create grid of orders to use
-  polyGrid = expand_grid(main=1:maxorder, tempday=1:maxorder,
-                         temphour=1:maxorder) %>%
-    mutate(aic=NA, numparams=NA)
+  # dynamically create grid of orders to use
+  expandGridList <- list()
+  allPolyTerms <- str_extract_all(form, 'poly[0-9]\\(.*\\)')[[1]]
+  for(p in 1:length(allPolyTerms)) expandGridList[[p]] <- 1:maxorder
+  names(expandGridList) <- allPolyTerms
+  polyGrid <-expand.grid(expandGridList)
+  polyGrid <- mutate(polyGrid, aic=NA, numparams=NA)
   
   # use AIC to find best model - from linear to maxordr for main and interaction effects
   cat(paste('\nfitting', nrow(polyGrid), 'polymodels:\n'))
   start <- Sys.time()
   for(i in 1:nrow(polyGrid)){
-    # convert character formula to proper formula and add in poly order
-    f_plusOrder <- gsub('order_tempmain', polyGrid$main[i], form)
-    f_plusOrder <- gsub('order_tempday', polyGrid$tempday[i], f_plusOrder)
-    f_plusOrder <- gsub('order_temphour', polyGrid$temphour[i], f_plusOrder)
-    f <- as.formula(paste('load ~', f_plusOrder))
+    # dynamically swap out poly names in formula for real names and orders
+    orders_i <- polyGrid[i,]
+    form_i <- form
+    for(name_p in allPolyTerms) {
+      order_p_i <- orders_i[, name_p] # the order for the name for this iteration
+      truename <- paste0('poly(', 
+                         substr(name_p, 7, nchar(name_p)-1), 
+                         ',', order_p_i, ')')
+      form_i=gsub(name_p, truename, form_i, fixed=T)  
+    }
+    form_updated <- as.formula(form_i)
+
     # fit model and save results
-    mod <- lm(f, data=data)
+    mod <- lm(form_updated, data=data)
     polyGrid$aic[i] <- AIC(mod)
     polyGrid$numparams[i] <- length(mod$coefficients)
     cat(i)
@@ -303,12 +270,16 @@ fit_best_polynomial_model <- function(form, data, maxorder){
   
   # refit
   # convert character formula to proper formula and add in poly order
-  f_final <- gsub('order_tempmain', finalparams$main, form)
-  f_final <- gsub('order_tempday', finalparams$tempday, f_final)
-  f_final <- gsub('order_temphour', finalparams$temphour, f_final)
-  f <- as.formula(paste('load ~', f_plusOrder))
+  for(name_p in allPolyTerms) {
+    order_p_i <- finalparams[, name_p] # the order for the name for this iteration
+    truename <- paste0('poly(', 
+                       substr(name_p, 7, nchar(name_p)-1), 
+                       ',', order_p_i, ')')
+    form=gsub(name_p, truename, form_i, fixed=T)  
+  }
+  form_updated <- as.formula(form)
   
-  mr_final <- lm(f, data=data)
+  mr_final <- lm(form_updated, data=data)
   cat('best params:')
   print(finalparams)
   return(mr_final)
