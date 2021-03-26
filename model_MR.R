@@ -4,7 +4,7 @@
 #________________________________________________________________
 
 # read in data
-source('read-in-data.r')
+source('read-in-data-and-helper-functions.r')
 
 #++++++++++++++
 # fit model

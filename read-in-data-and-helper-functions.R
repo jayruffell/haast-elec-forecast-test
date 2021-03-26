@@ -198,7 +198,6 @@ sort(sapply(mget(ls()),object.size))
 #________________________________________________________________
 
 # Poly terms must be numbered sequentially and specified without an order, thusly: "poly1(myvar) + poly2(mynextvar)"
-# NOTE have currently only tested on the below model!
 # EXAMPLE: 
 # test <- fit_best_polynomial_model(form=
 #                             'load ~ poly1(temp_ak) + 
