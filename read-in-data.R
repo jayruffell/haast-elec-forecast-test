@@ -107,9 +107,17 @@ gam_report <- function(starttime,  # call to Sys.time() right before running
 
 # function for resids plot - currently only std resids
 resids_plot <- function(mydf, mymod, mymod_char){
-  # extract preds
+  # extract preds and rmove interaction  terms
   predictors_incInts <- attr(mymod$terms , "term.labels")
-  predictors <- predictors_incInts[!grepl(':', predictors_incInts)]
+  predictors <- predictors_incInts[!grepl(':', predictors_incInts) &
+                                     !grepl('poly', predictors_incInts)] 
+  # remove polynomial terms
+  polypreds <- predictors[grepl('poly', predictors)]
+  polypreds <- c(polypreds, 'poly(temp_ak, 2)')
+  polypreds_updated <- gsub('poly\\(', "", polypreds)
+  polypreds_raw <- unique(gsub('\\, [1-9]\\)', "", polypreds_updated))
+  predictors <- c(polypreds_raw, predictors[!grepl('poly', predictors)])
+  
   # plot
   myplot <- mdf %>%
     mutate(resids=resid(mymod)) %>%

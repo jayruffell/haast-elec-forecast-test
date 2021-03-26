@@ -35,3 +35,4 @@
 # - check vars for MR model
 # - autocorrelation, if i havne't factored in
 # - public holiday/rain interaction
+# - add regularisation term to MR polynomials - or use GAMs on a supercomputer (which do penalisation)
