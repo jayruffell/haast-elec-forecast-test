@@ -10,8 +10,8 @@ source('read-in-data.r')
 # fit model
 #++++++++++++++
 
-mMR_int <- lm(load ~ temp_ak + daychar + hourchar + 
-                temp_ak:daychar + daychar:hourchar + temp_ak:hourchar +
+mMR_int <- lm(load ~ temp_ak + daygrouped + hourchar + 
+                temp_ak:daygrouped + daygrouped:hourchar + temp_ak:hourchar +
                 hol + daysSinceStart, data=mdf)
 summary(mMR_int) # lots of highly sig values
 AIC(mMR_int)

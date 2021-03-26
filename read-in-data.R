@@ -3,6 +3,8 @@
 # Read in data ----
 #________________________________________________________________
 
+# ***** NOTE all vars should be numeric, even if character vsersions of numbers (e..g "1" instead of 1). Otherwise resid plots mess up x-axis cos of factor ordering.
+
 cat('\nNOTE times are getting reported in UTC, but data is presumably NZ. Just FYI...\n')
 
 # params: filter dates for 'mdf', used for initial model training
@@ -34,8 +36,8 @@ dd <- read_csv('combineddata.csv') %>%
                                   ifelse(grepl('Fr', daychar), 5, 
                                          ifelse(grepl('Sa', daychar), 6, 
                                                 7)))))),
-    daygrouped=ifelse(daychar %in% c('Monday', 'Saturday', 'Sunday', 'Friday'),
-                      daychar, 'Other'),
+    daychar=as.character(day), # see note at top
+    daygrouped=ifelse(daychar %in% c('1', '5', '6', '7'), daychar, '0'),
     # week of year and days since start
     week=week(time),
     daysSinceStart = 1:nrow(.),
@@ -114,6 +116,8 @@ resids_plot <- function(mydf, mymod, mymod_char){
     sample_n(1000) %>%
     select(resids, predictors) %>%
     gather(key, value, -resids) %>%
+    # coerce predictors to have numeric values, for plotting
+    mutate(value=as.numeric(value)) %>%
     ggplot(aes(value, resids, colour=key)) + geom_point(alpha=0.1) + geom_smooth(se=F) +
     facet_wrap(~key, scales='free') + theme(legend.position = 'none') 
   print(myplot)

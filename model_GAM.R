@@ -41,7 +41,7 @@ start <- Sys.time(); gam_te <- bam(load ~
                                      #    k=c(100, 7),
                                      #    bs=c('cr','cr')) +
                                      s(day, k=7, bs='cr') +
-                                     daysSinceStart + hol
+                                     daychar + hol
                                    ,
                                    data = mdf,
                                    family = gaussian,
@@ -66,66 +66,8 @@ vis.gam(gam_te, view=c('day', 'temp_ak'), theta =170, phi = 5, zlab = "")
 vis.gam(gam_te, view=c('hol', 'temp_ak'), theta =170, phi = 5, zlab = "")
 graphics.off()
 
+gc()
 
 
-
-
-#________________________________________________________________
-
-# prelimnary gams that didn't work ----
-#________________________________________________________________
-
-#++++++++++++++
-# GAM with interactions via 'by' term  ** TOO SLOW ***
-#++++++++++++++
-# 
-# # from here https://stats.stackexchange.com/questions/32730/how-to-include-an-interaction-term-in-gam
-# 
-# tmp <- mutate(mdf, dayf=as.factor(daychar))
-# str(tmp)
-# Sys.time()
-# gam_by <- gam(load ~
-#                 # hour-day interaction with cyclic smooth
-#                 s(hour, bs='cc', by=dayf, k=24) +
-#                 # day-temp interaction
-#                 s(temp, bs='cs', by=dayf, k=200) +
-#                 # # temp-hour interaction
-#                 # te(temp_ak, day,
-#                 #    k=c(100, 7),
-#                 #    bs=c('cr','cr')) +
-#                 daysSinceStart + hol
-#               ,
-#               data = tmp,
-#               family = gaussian)
-# Sys.time()
-# summary(gam_by)# $r.sq
-# 
-# # plot
-# layout(matrix(1:4, nrow = 1))
-# plot(gam_by, shade = TRUE)
-# graphics.off()
-
-# #++++++++++++++
-# # prelim gam - like first one from above link. 
-# #++++++++++++++
-# 
-# # 'cr' and 'ps' are cubic- and p-splines, the ones chosen in the link. k should be set to maximum no. of unique values (and knots are then chosen automatically I believe)
-# # from above stackoverflow link: 
-# gam_prelim <- gam(load ~ s(hour, bs='cr', k = 24) +
-#                s(day, bs='cr', k = 7) +
-#                daysSinceStart + hol +
-#                s(temp_ak, bs='cr', k=200) # max 684 uniques values - but see above for how to check this. Note I'm probably not using a good value of k!
-#                ,
-#              data = mdf,
-#              family = gaussian)
-# summary(gam_prelim)$r.sq
-# 
-# # check if k vals are ok - # see printout, it tells you what to do :)
-# gam.check(gam_prelim) 
-# 
-# # plot 
-# layout(matrix(1:4, nrow = 1))
-# plot(gam_prelim, shade = TRUE)
-# graphics.off()
 
 
