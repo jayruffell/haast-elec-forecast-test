@@ -16,3 +16,12 @@ for(i in 1:length(models)){
                report_mape(testdf, models[[i]]), '\n'))
   fitted_vals_plot(newdata=testdf, models[[i]], plotnames[[i]], panels=5)
 }
+
+#________________________________________________________________
+
+# for winning model, check sensitivity to climate extremes ----
+#________________________________________________________________
+
+mape_by_temperature(testdata=testdf, mymod=mr_int_poly, 'm_int_poly')
+
+gc()

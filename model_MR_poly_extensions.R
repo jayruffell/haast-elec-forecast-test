@@ -61,11 +61,6 @@ m_int_poly_xmasInteraction <- lm(load ~
 # # higer order ints? - no worse AIC
 # tmp <- update(mr_int_poly, ~. + poly(temp_ak, 3):daychar:hourchar, data=mdf)
 
-# m_updated <- update(mr_int_poly, ~. + temp_ak:hourchar:xmasbreak, data=mdf)
-fitted_vals_plot(newdata=mdf, m_int_poly_xmasInteraction,
-                 'mr_int_poly_xmasInteraction', 
-                 panels=5,
-                 mystartdate='2016-07-01', myenddate='2017-07-01')
 resids_plot(mydf = mdf, mymod= m_int_poly_xmasInteraction, 
             mymod_char='mr_int_poly_xmasInteraction')
 
@@ -94,6 +89,7 @@ m_int_poly_xmasInteraction_ARMA <- gls(load ~
 #++++++++++++++
 # Fix nonlinearity in dayssincestart
 #++++++++++++++
+
 # debugonce(fit_best_polynomial_model)
 m_int_poly_xmasInteraction2 <- 
   fit_best_polynomial_model(form=
@@ -107,11 +103,6 @@ m_int_poly_xmasInteraction2 <-
 
 
 # UP TO HERE - resids plot isnt ptogging days since start, why?
-fitted_vals_plot(newdata=mdf, m_int_poly_xmasInteraction2,
-                 'mr_int_poly_xmasInteraction2', 
-                 panels=5,
-                 mystartdate='2016-07-01', myenddate='2017-07-01')
-debugonce(resids_plot)
 resids_plot(mydf = mdf, mymod= m_int_poly_xmasInteraction2, 
             mymod_char='mr_int_poly_xmasInteraction2')
 

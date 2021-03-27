@@ -28,9 +28,6 @@ mr_int_poly <- fit_best_polynomial_model(form=
 # model validation
 #++++++++++++++
 
-fitted_vals_summer_winter_plot(mydf = mdf, mymod= mr_int_poly, mymod_char='mr_int_poly')
-fitted_vals_plot(newdata=mdf, mr_int_poly, 'mr_int_poly', panels=5,
-                 mystartdate='2016-07-01', myenddate='2017-07-01')
 resids_plot(mydf = mdf, mymod= mr_int_poly, mymod_char='mr_int_poly')
 
 gc()

@@ -323,7 +323,64 @@ fit_best_polynomial_model <- function(form, data, maxorder){
   return(mr_final)
 }
 
+#________________________________________________________________
+
+# fucntion for sensitivity to extreme climate values - plot mape and temperature ordered by quantile (1000s)
+#________________________________________________________________
+
+mape_by_temperature <- function(testdata, mymod, plotname){
+  numBreaks <- 1000
+  quantilesdf <- testdata %>%
+    mutate(quantile=ntile(temp_ak, numBreaks), MAPE=NA)
+  # calc MAPE per quantile
+  for(i in 1:numBreaks){
+    quantilesdf$MAPE[quantilesdf$quantile==i] <-  
+      report_mape(testdata=filter(quantilesdf, quantile==i), mymod =mymod)
+  }
+  
+  # visualise
+  myplot <- quantilesdf %>%
+    sample_n(1000) %>%
+    select(quantile, temp_ak, MAPE) %>%
+    arrange(temp_ak) %>%
+    gather(key, value, -quantile) %>%
+    ggplot(aes(quantile, value, colour=key)) + geom_point(alpha=0.3) + geom_smooth(se=F) +
+    geom_vline(xintercept=50) + geom_vline(xintercept=950) + 
+    xlab('temperate quantile')
+  print(myplot)
+  myplot +
+    ggsave(paste0('perfByTempExtremes_', plotname, '.png'))
+}
+
 gc()                            
                             
-                     
+#________________________________________________________________
+
+# fucntion to create a dataset for plotting modelled relationships: medians for all vars in model except those getting plotted, which are fitted vals
+#________________________________________________________________
+
+# mymod: model object. varsToPlot: vector of var names in model, as string, e.g. # "create_newdata_for_fitted_vals_plot(mymod=mr_int_poly, varsToPlot=c('temp_ak', 'hourchar'))"
+create_newdata_for_fitted_vals_plot <- function(mymod, varsToPlot) {
+  
+  # create dataframe of median values for all data
+  newdata <- mdf %>%
+    mutate_if(is.numeric, median) %>%
+    # replace factors and char with new median versions
+    mutate(hourchar=as.character(hour),
+           hourf=as.factor(hour),
+           daychar=as.character(day),
+           dayf=as.factor(day),
+           # from read in data function
+           daygrouped=ifelse(daychar %in% c('1', '5', '6', '7'), daychar, '0'),
+           weekchar=as.character(week),
+           weekf=as.factor(week),
+           xmasbreakf=as.factor(xmasbreak),
+           holf=as.factor(hol))
+  # replace the focal vars with treu values
+  newdata[, varsToPlot] <- mdf[, varsToPlot]
+  out <- newdata %>%
+    mutate(fitted=predict(mymod, newdata=newdata))
+  return(out)
+}
+
 

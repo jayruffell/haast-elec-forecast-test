@@ -20,7 +20,6 @@ AIC(mr_int)
 # model validation
 #++++++++++++++
 
-fitted_vals_summer_winter_plot(mydf = mdf, mymod= mr_int, mymod_char='mr_int')
 resids_plot(mydf = mdf, mymod= mr_int, mymod_char='mr_int')
 
 gc()
