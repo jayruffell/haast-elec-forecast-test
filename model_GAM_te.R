@@ -53,8 +53,11 @@ gam_report(starttime = start, mygam = gam_te)
 #++++++++++++++
 
 gam.check(gam_te)
-fitted_vals_summer_winter_plot(mydf = mdf, mymod= gam_te, mymod_char='gam_te')
 resids_plot(mydf = mdf, mymod= gam_te, mymod_char='gam_te')
+
+# test data checks
+fitted_vals_plot(newdata=testdf, gam_te, 'gam_te', panels=5)
+report_mape(testdf, gam_te) # 5.6%
 
 #++++++++++++++
 # visualise modelled relationships

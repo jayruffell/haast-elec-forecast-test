@@ -1,15 +1,12 @@
-#________________________________________________________________
-
-# Read in data ----
-#________________________________________________________________
 
 # ***** NOTE all vars should be numeric, even if character vsersions of numbers (e..g "1" instead of 1). Otherwise resid plots mess up x-axis cos of factor ordering.
 
-cat('\nNOTE times are getting reported in UTC, but data is presumably NZ. Just FYI...\n')
+#________________________________________________________________
 
-# params: filter dates for 'mdf', used for initial model training
-startdate <- '2013-07-07'
-enddate <- '2017-07-07'
+# set params ----
+#________________________________________________________________
+
+cat('\nNOTE times are getting reported in UTC, but data is presumably NZ. Just FYI...\n')
 
 library(tidyverse)
 library(forecast)
@@ -19,6 +16,34 @@ library(ggfortify) #nice time series plotting
 library(fpp2) # datasets for 'Forecasting Principles and Practice book'
 library(GGally)
 library(mgcv)
+
+#++++++++++++++
+# start and end dates for training (mdf) test, and holdout data
+#++++++++++++++
+
+# plan: 
+# - train on model df
+# - test [period] days ahead and pick final model
+# - then retrain final model on same number of days as trained data, but step ahed so final date is right before holdout period, then retest on holdout data - also [period] days ahead.
+
+period <- 365 # days ahead to forecast in test and holdout sets
+
+# filter dates for 'mdf', used for initial model training
+startdate <- '2012-07-07'
+enddate <- '2016-07-07'
+
+# specify test data dates - for initial CV to test against 
+teststart <- as.Date(enddate)+1  # start date
+testend <- teststart + period
+
+# specify holdout data dates - for step ahead CV
+holdoutstart <- teststart + period
+holdoutend <- testend + period
+
+#________________________________________________________________
+
+# Read in data ----
+#________________________________________________________________
 
 # Read in data and add new variables
 dd <- read_csv('combineddata.csv') %>%
@@ -96,6 +121,8 @@ dd$holf <- as.factor(dd$hol)
 
 mdf <- dd %>%
   filter(time>=startdate & time<=enddate)
+testdf <- filter(dd, time>=teststart & time <=testend)
+holdoutdf <- filter(dd, time>=holdoutstart & time <=holdoutend)
 
 #________________________________________________________________
 
@@ -120,14 +147,12 @@ gam_report <- function(starttime,  # call to Sys.time() right before running
 # function for resids plot - currently only std resids
 #________________________________________________________________
 
-resids_plot <- function(mydf, mymod, mymod_char, ...){
+resids_plot <- function(mydf, mymod, mymod_char){
   # extract preds and rmove interaction  terms
   predictors_incInts <- attr(mymod$terms , "term.labels")
-  predictors <- predictors_incInts[!grepl(':', predictors_incInts) &
-                                     !grepl('poly', predictors_incInts)] 
+  predictors <- predictors_incInts[!grepl(':', predictors_incInts)] 
   # remove polynomial terms
   polypreds <- predictors[grepl('poly', predictors)]
-  polypreds <- c(polypreds, 'poly(temp_ak, 2)')
   polypreds_updated <- gsub('poly\\(', "", polypreds)
   polypreds_raw <- unique(gsub('\\, [1-9]\\)', "", polypreds_updated))
   predictors <- c(polypreds_raw, predictors[!grepl('poly', predictors)])
@@ -200,7 +225,7 @@ fitted_vals_plot <- function(newdata, mymod, mymod_char, panels,
 report_mape <- function(testdata, mymod){
   predsdf <- testdata %>%
     mutate(fitted=predict(mymod, newdata=testdata))
-  return(100 * mean(abs((predsdf$load - predsdf$fitted)/predsdf$load)))
+  return(round(100 * mean(abs((predsdf$load - predsdf$fitted)/predsdf$load)), 2))
 }
 
 # call to see mem usage

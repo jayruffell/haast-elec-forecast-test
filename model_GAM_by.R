@@ -36,7 +36,6 @@ gam_report(starttime = start, mygam = gam_by)
 #++++++++++++++
 
 gam.check(gam_by)
-fitted_vals_summer_winter_plot(mydf = mdf, mymod= gam_by, mymod_char='gam_by')
 resids_plot(mydf = mdf, mymod= gam_by, mymod_char='gam_by')
 
 #++++++++++++++
@@ -48,5 +47,3 @@ plot(gam_te, all.terms=T, pages=1)
 # vis.gam(gam_te, view=c('day', 'temp_ak'), theta =170, phi = 5, zlab = "")
 # vis.gam(gam_te, view=c('hol', 'temp_ak'), theta =170, phi = 5, zlab = "")
 # graphics.off()
-
-

@@ -111,6 +111,7 @@ fitted_vals_plot(newdata=mdf, m_int_poly_xmasInteraction2,
                  'mr_int_poly_xmasInteraction2', 
                  panels=5,
                  mystartdate='2016-07-01', myenddate='2017-07-01')
+debugonce(resids_plot)
 resids_plot(mydf = mdf, mymod= m_int_poly_xmasInteraction2, 
             mymod_char='mr_int_poly_xmasInteraction2')
 
