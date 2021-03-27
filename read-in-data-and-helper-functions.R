@@ -26,6 +26,7 @@ dd <- read_csv('combineddata.csv') %>%
   mutate(
     hour=hour(time),  
     hourchar=as.character(hour),
+    hourf=as.factor(hour),
     # day - numeric, char, and tues-thurs grouped (based on EDA)
     daychar=weekdays(time),
     day=
@@ -38,12 +39,15 @@ dd <- read_csv('combineddata.csv') %>%
                                                 7)))))),
     daychar=as.character(day), # see note at top
     daygrouped=ifelse(daychar %in% c('1', '5', '6', '7'), daychar, '0'),
+    dayf=as.factor(day),
     # week of year and days since start
     week=week(time),
     weekchar=as.character(week),
+    weekf=as.factor(week),
     daysSinceStart = 1:nrow(.),
     # xmas break
-    xmasbreak=ifelse(week %in% c(52, 1), 1, 0))
+    xmasbreak=ifelse(week %in% c(52, 1), 1, 0),
+    xmasbreakf=as.factor(xmasbreak))
 
 # create public hols dataframe and join to main df
 holsdf <- data.frame(date=c('2013-12-25',
@@ -83,6 +87,7 @@ dd <- dd %>%
   left_join(holsdf, by='date') %>%
   select(-date)
 dd$hol[is.na(dd$hol)] <- 0
+dd$holf <- as.factor(dd$hol)
 
 #________________________________________________________________
 
@@ -115,7 +120,7 @@ gam_report <- function(starttime,  # call to Sys.time() right before running
 # function for resids plot - currently only std resids
 #________________________________________________________________
 
-resids_plot <- function(mydf, mymod, mymod_char){
+resids_plot <- function(mydf, mymod, mymod_char, ...){
   # extract preds and rmove interaction  terms
   predictors_incInts <- attr(mymod$terms , "term.labels")
   predictors <- predictors_incInts[!grepl(':', predictors_incInts) &
@@ -147,6 +152,7 @@ resids_plot <- function(mydf, mymod, mymod_char){
 # function for fitted vs predicted values for specified time ranges
 #________________________________________________________________
 
+# *** GENERALLY NOT NEEDED NOW THAT IVE ADDED DATERANGE TO OTHER FITTED VS PREDS FUNCTION
 fitted_vals_summer_winter_plot <- function(mydf, mymod, mymod_char){
   myplot <- mydf %>%
     mutate(fitted=predict(mymod)) %>%
@@ -164,18 +170,26 @@ fitted_vals_summer_winter_plot <- function(mydf, mymod, mymod_char){
 
 #________________________________________________________________
 
-# function for fitted vs predicted values on all test data
+# function for fitted vs predicted values on all test data, splitting data into panels so charts aren't too messy
 #________________________________________________________________
 
-fitted_vals_plot <- function(testdata, mymod, mymod_char){
-  myplot <- testdata %>%
-    mutate(fitted=predict(mymod, newdata=testdata)) %>%
-    select(fitted, load, time) %>%
-    gather(key, value, -time) %>%
-    ggplot(aes(time, value, colour=key)) + geom_line()
+fitted_vals_plot <- function(newdata, mymod, mymod_char, panels,
+                             mystartdate=min(newdata$time),
+                             myenddate=max(newdata$time)){
+  myplot <- newdata %>%
+    mutate(fitted=predict(mymod, newdata=newdata)) %>%
+    filter(time>=mystartdate & time<=myenddate)
+  myplot <- myplot %>%
+    arrange(time) %>%
+    mutate(index=1:nrow(.)) %>%
+    mutate(panel=ntile(index, panels)) %>%
+    select(fitted, load, time, panel)  %>%
+    gather(key, value, -time, -panel) %>%
+    ggplot(aes(time, value, colour=key)) + geom_line() + 
+    facet_wrap(~panel, ncol=1, scales='free')
   print(myplot)
   myplot +
-    ggsave(paste0('predictedVsFitted_testdata_', mymod_char, '.png'), height=6, width=10)
+    ggsave(paste0('predictedVsFitted_', mymod_char, '.png'), height=6, width=10)
 }
 
 #________________________________________________________________
@@ -215,7 +229,7 @@ fit_best_polynomial_model <- function(form, data, maxorder){
   
   # dynamically create grid of orders to use
   expandGridList <- list()
-  allPolyTerms <- str_extract_all(form, 'poly[0-9]\\(.*\\)')[[1]]
+  allPolyTerms <- str_extract_all(form, 'poly[0-9]\\(.*?\\)')[[1]]
   for(p in 1:length(allPolyTerms)) expandGridList[[p]] <- 1:maxorder
   names(expandGridList) <- allPolyTerms
   polyGrid <-expand.grid(expandGridList)

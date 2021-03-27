@@ -17,7 +17,7 @@ mr_int_poly <- fit_best_polynomial_model(form=
                             poly2(temp_ak):daychar +
                             poly3(temp_ak):hourchar +
                             daychar:hourchar +
-                          hol + daysSinceStart + weekchar',
+                          hol + daysSinceStart + weekchar + xmasbreak',
                           data=mdf, maxorder=3)
 
 #++++++++++++++
@@ -29,6 +29,8 @@ mr_int_poly <- fit_best_polynomial_model(form=
 #++++++++++++++
 
 fitted_vals_summer_winter_plot(mydf = mdf, mymod= mr_int_poly, mymod_char='mr_int_poly')
+fitted_vals_plot(newdata=mdf, mr_int_poly, 'mr_int_poly', panels=5,
+                 mystartdate='2016-07-01', myenddate='2017-07-01')
 resids_plot(mydf = mdf, mymod= mr_int_poly, mymod_char='mr_int_poly')
 
 gc()
