@@ -17,17 +17,26 @@ mr_int_poly <- fit_best_polynomial_model(form=
                             poly2(temp_ak):daychar +
                             poly3(temp_ak):hourchar +
                             daychar:hourchar +
-                          hol + daysSinceStart + weekchar + xmasbreak',
+                            daysSinceStart + weekchar + hol',
                           data=mdf, maxorder=3)
 
 #++++++++++++++
-# PLaceholder: do auto.arima() on resids, and then refit with this corr structure
+# try separeate model with higher order polys. Gonna do on test data sep cos AIC may overfit
 #++++++++++++++
 
+mr_int_poly_4 <- fit_best_polynomial_model(form=
+                                           'load ~ poly1(temp_ak) +
+                            daychar + hourchar +
+                            poly2(temp_ak):daychar +
+                            poly3(temp_ak):hourchar +
+                            daychar:hourchar +
+                            daysSinceStart + weekchar + hol',
+                                         data=mdf, maxorder=4)
 #++++++++++++++
 # model validation
 #++++++++++++++
 
 resids_plot(mydf = mdf, mymod= mr_int_poly, mymod_char='mr_int_poly')
+resids_plot(mydf = mdf, mymod= mr_int_poly_4, mymod_char='mr_int_poly_4')
 
 gc()

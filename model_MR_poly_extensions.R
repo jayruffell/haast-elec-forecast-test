@@ -48,18 +48,15 @@ gc()
 # Fix with interactions
 #++++++++++++++
 
-m_int_poly_xmasInteraction <- lm(load ~ 
-                  # main effects
-                  poly(temp_ak, 3) + daychar + hourchar + hol + 
-                  daysSinceStart + weekchar + xmasbreak +
-                  # interations with temp
-                  poly(temp_ak, 3):daychar + poly(temp_ak, 3):hourchar + 
-                  poly(temp_ak, 3):xmasbreak +
-                  # day/hour interactions
-                  daychar:hourchar + daychar:xmasbreak + hourchar:xmasbreak, 
-                data = mdf)
-# # higer order ints? - no worse AIC
-# tmp <- update(mr_int_poly, ~. + poly(temp_ak, 3):daychar:hourchar, data=mdf)
+m_int_poly_xmasInteraction <- 
+  fit_best_polynomial_model(form=
+                              'load ~ 
+       poly1(temp_ak) + daychar + hourchar +
+       daysSinceStart + weekchar + xmasbreak +
+       poly2(temp_ak):daychar + poly3(temp_ak):hourchar + 
+       poly4(temp_ak):xmasbreak +
+       daychar:hourchar + daychar:xmasbreak + hourchar:xmasbreak', 
+                            data=mdf, maxorder=3)
 
 resids_plot(mydf = mdf, mymod= m_int_poly_xmasInteraction, 
             mymod_char='mr_int_poly_xmasInteraction')
@@ -75,7 +72,7 @@ auto.arima(ts(modResids), stationary = T) # ARMA(3, 1)
 
 m_int_poly_xmasInteraction_ARMA <- gls(load ~ 
                   # main effects
-                  poly(temp_ak, 3) + daychar + hourchar + hol + 
+                  poly(temp_ak, 3) + daychar + hourchar +
                   daysSinceStart + weekchar + xmasbreak +
                   # interations with temp
                   poly(temp_ak, 3):daychar + poly(temp_ak, 3):hourchar + 
@@ -83,8 +80,8 @@ m_int_poly_xmasInteraction_ARMA <- gls(load ~
                   # day/hour interactions
                   daychar:hourchar + daychar:xmasbreak + hourchar:xmasbreak, 
                   data = mdf, correlation = corARMA(p = 3, q = 1))
-
-# ==> can't fit in memory
+resids_plot(mydf = mdf, mymod= m_int_poly_xmasInteraction, 
+            mymod_char='mr_int_poly_xmasInteraction')
 
 #++++++++++++++
 # Fix nonlinearity in dayssincestart
@@ -94,7 +91,7 @@ m_int_poly_xmasInteraction_ARMA <- gls(load ~
 m_int_poly_xmasInteraction2 <- 
   fit_best_polynomial_model(form=
   'load ~ 
-       poly1(temp_ak) + daychar + hourchar + hol + 
+       poly1(temp_ak) + daychar + hourchar +
        poly5(daysSinceStart) + weekchar + xmasbreak +
        poly2(temp_ak):daychar + poly3(temp_ak):hourchar + 
        poly4(temp_ak):xmasbreak +
@@ -102,7 +99,6 @@ m_int_poly_xmasInteraction2 <-
      data=mdf, maxorder=3)
 
 
-# UP TO HERE - resids plot isnt ptogging days since start, why?
 resids_plot(mydf = mdf, mymod= m_int_poly_xmasInteraction2, 
             mymod_char='mr_int_poly_xmasInteraction2')
 
